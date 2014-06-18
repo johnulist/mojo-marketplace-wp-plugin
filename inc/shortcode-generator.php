@@ -21,9 +21,9 @@ function mm_add_inline_popup_content() {
 		<p>I would like to display
 			<select name="mojo-sg-quantity" class="mojo-sg-quantity" style="width:40px;">
 				<?php
-				for ( $i = 1; $i <= 10; $i++ ) { 
+				for ( $i = 1; $i <= apply_filters( 'mm_sg_max_qty_themes', 10 ); $i++ ) { 
 					?>
-				<option value='<?php echo $i; ?>' <?php selected( 3, $i, true ); ?>><?php echo $i; ?></option>
+				<option value='<?php echo $i; ?>' <?php selected( apply_filters( 'mm_sg_default_qty_themes', 3 ), $i, true ); ?>><?php echo $i; ?></option>
 					<?php
 				}
 				?>
@@ -67,7 +67,6 @@ add_action( 'admin_footer-page-new.php', 'mm_add_inline_popup_content' );
 add_action( 'admin_footer-post.php', 'mm_add_inline_popup_content' );
 add_action( 'admin_footer-page.php', 'mm_add_inline_popup_content' );
 add_action( 'admin_footer-widgets.php', 'mm_add_inline_popup_content' );
-add_action( 'admin_footer-index.php', 'mm_add_inline_popup_content' );
 
 
 function mm_sg_js() {
@@ -101,7 +100,6 @@ add_action( 'admin_footer-page-new.php', 'mm_sg_js' );
 add_action( 'admin_footer-post.php', 'mm_sg_js' );
 add_action( 'admin_footer-page.php', 'mm_sg_js' );
 add_action( 'admin_footer-widgets.php', 'mm_sg_js' );
-add_action( 'admin_footer-index.php', 'mm_sg_js' );
 
 function mm_item_shortcode( $atts ) {
 	global $use_mm_styles;

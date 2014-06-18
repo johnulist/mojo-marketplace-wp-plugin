@@ -6,6 +6,15 @@ function mm_setup() {
 	}
 	if( ! get_option( 'mm_install_date' ) ) {
 		update_option( 'mm_install_date', date( 'M d, Y' ) );
+		if( function_exists( 'mm_ux_log' ) ) {
+			$event = array(
+				't'		=> 'event',
+				'ec'	=> 'plugin_status',
+				'ea'	=> 'installed',
+				'el'	=> 'Install date: ' . get_option( 'mm_install_date', date( 'M d, Y' ) ),
+			);
+			mm_ux_log( $event );
+		}
 	}
 }
 add_action( 'admin_init', 'mm_setup' );
@@ -37,7 +46,7 @@ function mm_api( $args = array(), $query = array() ) {
 	return $transient[ md5( $request_url ) ];
 }
 
-function mm_build_link( $url, $args = array() ) {
+function mm_build_link( $url, $args = array(), $tracking = false ) {
 	$defaults = array(
 		'utm_source'	=> 'mojo_wp_plugin', //this should always be mojo_wp_plugin
 		'utm_campaign'	=> 'mojo_wp_plugin',
@@ -46,9 +55,27 @@ function mm_build_link( $url, $args = array() ) {
 		'r'				=> get_option( 'mm_master_aff' ),
 	);
 	$args = wp_parse_args( array_filter( $args ), array_filter( $defaults ) );
+
+	$test = get_transient( 'mm_test', '' );
+
+	if( isset( $test['key'] ) && isset( $test['name'] ) ) {
+		$args['utm_medium'] = $args['utm_medium'] . "_" . $test['name'] . "_" . $test['key'];
+	}
+
 	$query = http_build_query( $args );
 	$url = $url . '?' . $query;
+	
 	return esc_url( $url );
+	/* Tracking still broken
+	if( ! $tracking ) {
+		return esc_url( $url );
+	} else {
+		$endpoint = MM_BASE_URL . "e.php";
+		$action = $tracking;
+		$nonce = wp_create_nonce( 'mm_nonce-' . $action );
+		return $endpoint . "?" . 'action=' . $action . '&nonce=' . $nonce;
+	}
+	*/
 }
 
 function mm_clear_transients() {
@@ -58,7 +85,6 @@ function mm_clear_transients() {
 }
 add_action( 'wp_login', 'mm_clear_transients' );
 add_action( 'pre_current_active_plugins', 'mm_clear_transients' );
-
 
 function mm_cron() {
 	if ( ! wp_next_scheduled( 'mm_cron_twicedaily' ) ) {
@@ -72,3 +98,22 @@ function mm_cron() {
 	}
 }
 add_action( 'admin_init', 'mm_cron' );
+
+function mm_slug_to_title( $slug ) {
+	$words = explode( '-', $slug );
+	$capital_words = array_map( 'ucfirst', $words );
+	$title = implode( ' ', $capital_words );
+	return $title;
+}
+
+function mm_title_to_slug( $title ) {
+	$words = explode( ' ', $title );
+	$lowercase_words = array_map( 'strtolower', $words );
+	$slug = implode( '-', $lowercase_words );
+	return $slug;
+}
+
+function mm_require( $file ) {
+	$file = apply_filters( 'mm_require_file', $file );
+	require( $file );
+}
