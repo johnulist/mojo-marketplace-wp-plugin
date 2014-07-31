@@ -37,29 +37,39 @@ function mm_ux_log( $args = array() ) {
 		'ec'	=> '', //event category
 		'ea'	=> '', //event action
 		'el'	=> '', //event label
-		'ev'	=> ''  //event value
+		'ev'	=> '', //event value
 	);
+
+	if( isset( $_SERVER['REMOTE_ADDR'] ) ) {
+		$defaults['uip'] = $_SERVER['REMOTE_ADDR'];
+	}
+
+	$params = wp_parse_args( $args, $defaults );
 
 	$test = get_transient( 'mm_test', '' );
 
 	if( isset( $test['key'] ) && isset( $test['name'] ) ) {
-		$defaults['cm'] = $defaults['cm'] . "_" . $test['name'] . "_" . $test['key'];
+		$params['cm'] = $params['cm'] . "_" . $test['name'] . "_" . $test['key'];
 	}
 
-	if( isset( $_SERVER['REMOTE_IP'] ) ) {
-		$defaults['uip'] = $_SERVER['REMOTE_IP'];
+	//use test account for testing
+	if( defined( 'WP_DEBUG' ) && WP_DEBUG ) {
+		$params['tid'] = 'UA-19617272-27'; 
 	}
 
-	$params = wp_parse_args( $args, $defaults );
+	$params['z'] = (int) str_pad( mt_rand( 0, 999999999999 ), 12, "0" );
+
 	$query = http_build_query( array_filter( $params ) );
+	
 	$args = array(
 		'body'		=> $query,
 		'method'	=> 'POST',
 		'blocking'	=> false
 	);
+	
 	wp_remote_post( $url, $args );
 }
-add_action( 'admin_footer', 'mm_ux_log', 90 );
+add_action( 'admin_footer', 'mm_ux_log', 9 );
 
 function mm_ux_log_start() {
 	$session = array(
@@ -111,9 +121,8 @@ function mm_ux_log_activated() {
 	);
 	mm_ux_log( $event );
 }
-$plugin_dir = plugin_dir_path( dirname( __FILE__ ) );
-register_activation_hook( $plugin_dir . "mojo-marketplace.php", 'mm_ux_log_activated' );
-register_deactivation_hook( $plugin_dir . "mojo-marketplace.php", 'mm_ux_log_deactivated' );
+register_activation_hook( MM_BASE_DIR . "mojo-marketplace.php", 'mm_ux_log_activated' );
+register_deactivation_hook( MM_BASE_DIR . "mojo-marketplace.php", 'mm_ux_log_deactivated' );
 
 function mm_ux_log_theme_preview() {
 	if( isset( $_GET['page'] ) && $_GET['page'] == "mojo-theme-preview" ) {
@@ -175,8 +184,7 @@ function mm_ux_log_theme_category_mojo() {
 add_action( 'admin_footer', 'mm_ux_log_theme_category_mojo' );
 
 function mm_ux_log_plugin_version() {
-	$plugin_dir = plugin_dir_path( dirname( __FILE__ ) );
-	$plugin = get_plugin_data( $plugin_dir . 'mojo-marketplace.php' );
+	$plugin = get_plugin_data( MM_BASE_DIR . 'mojo-marketplace.php' );
 	$event = array(
 		't'		=> 'event',
 		'ec'	=> 'scheduled',
@@ -243,7 +251,7 @@ function mm_ux_log_current_theme() {
 	$event = array(
 		't'		=> 'event',
 		'ec'	=> 'scheduled',
-		'ea'	=> 'theme_count',
+		'ea'	=> 'current_theme',
 		'el'	=> $theme
 	);
 	$events = get_option( 'mm_cron', array() );
@@ -264,8 +272,10 @@ add_action( 'mm_cron_weekly', 'mm_ux_log_scheduled_events_weekly' );
 function mm_ux_log_scheduled_events_monthly() {
 	$events = get_option( 'mm_cron', array( 'monthly' => array() ) );
 	$monthly_events = $events['monthly'];
-	foreach ( $monthly_events as $event => $details ) {
-		mm_ux_log( $details );
+	if( count( $events['monthly'] ) >= 1 ) {
+		foreach ( $monthly_events as $event => $details ) {
+			mm_ux_log( $details );
+		}
 	}
 }
 add_action( 'mm_cron_monthly', 'mm_ux_log_scheduled_events_monthly' );
@@ -273,8 +283,10 @@ add_action( 'mm_cron_monthly', 'mm_ux_log_scheduled_events_monthly' );
 function mm_ux_log_scheduled_events_twicedaily() {
 	$events = get_option( 'mm_cron', array( 'twicedaily' => array() ) );
 	$twicedaily_events = $events['twicedaily'];
-	foreach ( $twicedaily_events as $event => $details ) {
-		mm_ux_log( $details );
+	if( count( $events['twicedaily'] ) >= 1 ) {
+		foreach ( $twicedaily_events as $event => $details ) {
+			mm_ux_log( $details );
+		}
 	}
 }
 add_action( 'mm_cron_twicedaily', 'mm_ux_log_scheduled_events_twicedaily' );
@@ -282,8 +294,10 @@ add_action( 'mm_cron_twicedaily', 'mm_ux_log_scheduled_events_twicedaily' );
 function mm_ux_log_scheduled_events_daily() {
 	$events = get_option( 'mm_cron', array( 'daily' => array() ) );
 	$daily_events = $events['daily'];
-	foreach ( $daily_events as $event => $details ) {
-		mm_ux_log( $details );
+	if( count( $events['daily'] ) >= 1 ) {
+		foreach ( $daily_events as $event => $details ) {
+			mm_ux_log( $details );
+		}
 	}
 }
 add_action( 'mm_cron_daily', 'mm_ux_log_scheduled_events_daily' );
@@ -291,8 +305,10 @@ add_action( 'mm_cron_daily', 'mm_ux_log_scheduled_events_daily' );
 function mm_ux_log_scheduled_events_hourly() {
 	$events = get_option( 'mm_cron', array( 'hourly' => array() ) );
 	$hourly_events = $events['hourly'];
-	foreach ( $hourly_events as $event => $details ) {
-		mm_ux_log( $details );
+	if( count( $events['hourly'] ) >= 1 ) {
+		foreach ( $hourly_events as $event => $details ) {
+			mm_ux_log( $details );
+		}
 	}
 }
 add_action( 'mm_cron_hourly', 'mm_ux_log_scheduled_events_hourly' );
@@ -327,6 +343,17 @@ function mm_ux_log_content_status( $new_status, $old_status, $post ) {
 			't'		=> 'event',
 			'ec'	=> 'user_action',
 			'ea'	=> 'first_post',
+			'el'	=> $post->post_type
+		);
+		mm_ux_log( $event );
+	}
+
+	//fifth post is 7 beause of the example post and page.
+	if( $post->ID == 7 && $old_status != 'publish' && $new_status == 'publish' ) {
+		$event = array(
+			't'		=> 'event',
+			'ec'	=> 'user_action',
+			'ea'	=> 'fifth_post',
 			'el'	=> $post->post_type
 		);
 		mm_ux_log( $event );
@@ -472,40 +499,29 @@ function mm_ux_log_btn_click() {
 }
 add_action( 'admin_footer', 'mm_ux_log_btn_click' );
 
-function mm_jetpack_log_photon_enabled() {
+function mm_jetpack_log_module_enabled( $module ) {
 	$event = array(
 		't'		=> 'event',
 		'ec'	=> 'jetpack_event',
 		'ea'	=> 'module_enabled',
-		'el'	=> 'photon'
+		'el'	=> $module
 	);
 	mm_ux_log( $event );
 }
-add_action( 'jetpack_activate_module_photon', 'mm_jetpack_log_photon_enabled' );
+add_action( 'jetpack_pre_activate_module', 'mm_jetpack_log_module_enabled', 10, 1 );
 
-function mm_jetpack_log_likes_enabled() {
+function mm_jetpack_log_module_disabled( $module ) {
 	$event = array(
 		't'		=> 'event',
 		'ec'	=> 'jetpack_event',
-		'ea'	=> 'module_enabled',
-		'el'	=> 'likes'
+		'ea'	=> 'module_disabled',
+		'el'	=> $module
 	);
 	mm_ux_log( $event );
 }
-add_action( 'jetpack_activate_module_likes', 'mm_jetpack_log_likes_enabled' );
+add_action( 'jetpack_pre_deactivate_module', 'mm_jetpack_log_module_disabled', 10, 1 );
 
-function mm_jetpack_log_publicize_enabled() {
-	$event = array(
-		't'		=> 'event',
-		'ec'	=> 'jetpack_event',
-		'ea'	=> 'module_enabled',
-		'el'	=> 'publicize'
-	);
-	mm_ux_log( $event );
-}
-add_action( 'jetpack_activate_module_publicize', 'mm_jetpack_log_publicize_enabled' );
-
-function mm_jetpack_log_publicized( $submit_post, $post_id, $service_name, $connection ){
+function mm_jetpack_log_publicized( $submit_post, $post_id, $service_name, $connection ) {
 	$event = array(
 		't'		=> 'event',
 		'ec'	=> 'jetpack_event',
@@ -515,3 +531,21 @@ function mm_jetpack_log_publicized( $submit_post, $post_id, $service_name, $conn
 	mm_ux_log( $event );
 }
 add_action( 'publicize_save_meta', 'mm_jetpack_log_publicized', 10, 4 );
+
+function mm_jetpack_log_jps_time() {
+	if( isset( $_GET['welcome-screen-hide'] ) ) {
+		$start_time = get_option( 'jps_started', false );
+		if( $start_time ) {
+			$now = time();
+			$completion_time = $now - $start_time;
+			$event = array(
+				't'		=> 'event',
+				'ec'	=> 'jetpack_event',
+				'ea'	=> 'jps_completion_time',
+				'el'	=> $completion_time
+			);
+			mm_ux_log( $event );
+		}
+	}
+}
+add_action( 'admin_init', 'mm_jetpack_log_jps_time' );
