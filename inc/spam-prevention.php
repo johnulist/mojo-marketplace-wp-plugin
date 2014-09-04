@@ -35,9 +35,9 @@ function mm_spam_stop_forum_spam_api( $args = array() ) {
 					
 					$blocked = false;
 					
-					if( isset( $data->ip->confidence ) && $data->ip->confidence > get_option( 'mm_confidence_ip', 80 ) ) { $blocked = 'ip';	}
-					if( isset( $data->username->confidence ) && $data->username->confidence > get_option( 'mm_confidence_username', 99 ) ) { $blocked = 'username';	}
-					if( isset( $data->email->confidence ) && $data->email->confidence > get_option( 'mm_confidence_email', 80 ) ) {	$blocked = 'email';	}
+					if( isset( $data->ip->confidence ) && $data->ip->confidence > get_option( 'mm_confidence_ip', 75 ) ) { $blocked = 'ip';	}
+					if( isset( $data->username->confidence ) && $data->username->confidence > get_option( 'mm_confidence_username', 95 ) ) { $blocked = 'username';	}
+					if( isset( $data->email->confidence ) && $data->email->confidence > get_option( 'mm_confidence_email', 75 ) ) {	$blocked = 'email';	}
 					
 					if( $blocked ) {
 						$event = array(

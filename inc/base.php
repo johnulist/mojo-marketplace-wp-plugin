@@ -6,15 +6,16 @@ function mm_setup() {
 	}
 	if( ! get_option( 'mm_install_date' ) ) {
 		update_option( 'mm_install_date', date( 'M d, Y' ) );
-		if( function_exists( 'mm_ux_log' ) ) {
-			$event = array(
-				't'		=> 'event',
-				'ec'	=> 'plugin_status',
-				'ea'	=> 'installed',
-				'el'	=> 'Install date: ' . get_option( 'mm_install_date', date( 'M d, Y' ) ),
-			);
-			mm_ux_log( $event );
-		}
+		$event = array(
+			't'		=> 'event',
+			'ec'	=> 'plugin_status',
+			'ea'	=> 'installed',
+			'el'	=> 'Install date: ' . get_option( 'mm_install_date', date( 'M d, Y' ) ),
+			'keep'	=> false
+		);
+		$events = get_option( 'mm_cron', array() );
+		$events['hourly'][ $event['ea'] ] = $event;
+		update_option( 'mm_cron', $events );
 	}
 }
 add_action( 'admin_init', 'mm_setup' );
@@ -35,15 +36,19 @@ function mm_api( $args = array(), $query = array() ) {
 	$query = http_build_query( array_filter( $query ) );
 	$request_url = $api_url . $args['mojo-items'] . '/' . $args['mojo-platform'] . '/' . $args['mojo-type'];
 	if( isset( $query['count'] ) || isset( $query['seller'] ) ) {
+		$request_url = rtrim( $request_url, '/' );
 		$request_url = $request_url . '?' . $query;
 	}
-	if( false === ( $transient = get_transient( 'mojo-api-calls' ) ) || ! isset( $transient[ md5( $request_url ) ] ) ) {
-		$transient[ md5( $request_url ) ] = wp_remote_get( $request_url );
-		if( ! is_wp_error( $transient[ md5( $request_url ) ] ) ) {
-			set_transient( 'mojo-api-calls', $transient, DAY_IN_SECONDS );	
+
+	$key = md5( $request_url );
+
+	if( false === ( $transient = get_transient( 'mm_api_calls' ) ) || ! isset( $transient[ $key ] ) ) {
+		$transient[ $key ] = wp_remote_get( $request_url );
+		if( ! is_wp_error( $transient[ $key ] ) ) {
+			set_transient( 'mm_api_calls', $transient, DAY_IN_SECONDS );	
 		}
 	}
-	return $transient[ md5( $request_url ) ];
+	return $transient[ $key ];
 }
 
 function mm_build_link( $url, $args = array(), $tracking = false ) {
@@ -79,13 +84,13 @@ function mm_build_link( $url, $args = array(), $tracking = false ) {
 	*/
 }
 
-function mm_clear_transients() {
+function mm_clear_api_calls() {
 	if( is_admin() ) {
 		delete_transient( 'mojo-api-calls' );
 	}
 }
-add_action( 'wp_login', 'mm_clear_transients' );
-add_action( 'pre_current_active_plugins', 'mm_clear_transients' );
+add_action( 'wp_login', 'mm_clear_api_calls' );
+add_action( 'pre_current_active_plugins', 'mm_clear_api_calls' );
 
 function mm_cron() {
 	if ( ! wp_next_scheduled( 'mm_cron_monthly' ) ) {
@@ -140,6 +145,15 @@ function mm_require( $file ) {
 		require( $file );
 	}
 	return $file;
+}
+
+function mm_minify( $content ) {
+	$content = str_replace( "\r", "", $content );
+	$content = str_replace( "\n", "", $content );
+	$content = str_replace( "\t", "", $content );
+	$content = str_replace( "  ", " ", $content );
+	$content = trim( $content );
+	return $content;
 }
 
 function mm_safe_hosts( $hosts ) {
