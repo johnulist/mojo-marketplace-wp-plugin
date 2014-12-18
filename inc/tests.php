@@ -3,9 +3,7 @@ function mm_ab_test_inclusion( $test_name, $key, $audience, $duration ) {
 	if( false === ( $test = get_transient( 'mm_test', false ) ) ) {
 		$previous_tests = get_option( 'mm_previous_tests', array() );
 		
-		if( in_array( $test_name, $previous_tests ) ) {
-			return false;
-		}
+		if( in_array( $test_name, $previous_tests ) ) { return false; }
 		
 		$score = mt_rand( 0, 99 );
 		
@@ -15,10 +13,8 @@ function mm_ab_test_inclusion( $test_name, $key, $audience, $duration ) {
 			update_option( 'mm_previous_tests', $previous_tests );
 			return true;
 		}
-	} else {
-		if( $test['key'] === $key ) {
-			return true;
-		}
+	} else if( $test['key'] === $key ) {
+		return true;
 	}
 	return false;
 }
@@ -47,8 +43,7 @@ function mm_ab_test_file( $test_name, $file, $original, $test, $audience = 10, $
 
 function mm_ab_test_content( $test_name, $original, $test, $audience = 10, $duration = WEEK_IN_SECONDS ) {
 	$key = md5( serialize( $test ) );
-	$inclusion = mm_ab_test_inclusion( $test_name, $key, $audience, $duration );
-	if( $inclusion ) {
+	if( mm_ab_test_inclusion( $test_name, $key, $audience, $duration ) ) {
 		return $test;
 	}
 	return $original;
@@ -80,7 +75,7 @@ add_filter( 'mm_themes_accepted_categories', 'mm_themes_categories' );
 /* Start individual tests*/
 
 /**
- * Should Jetpack Starter perform well, we would move this stuff to inc/jetpack.php.
+ * Should Jetpack Start perform well, we would move this stuff to inc/jetpack.php.
  */
 
 
@@ -93,8 +88,8 @@ function mm_jetpack_bluehost_only() {
 function mm_jetpack_start_test() {
 	$file = MM_BASE_DIR . 'tests/jetpack-start/jetpack-start.php';
 	if( file_exists( $file ) && mm_jetpack_bluehost_only() ) {
-		if( ! mm_ab_test_inclusion( 'jetpack-start-v6.1', md5( 'jetpack-start-v6.1' ), 20, WEEK_IN_SECONDS * 4 ) ) {
-			mm_ab_test_inclusion( 'jetpack-start-exempt-v6.1', md5( 'jetpack-start-exempt-v6.1' ), 25, WEEK_IN_SECONDS * 4 );
+		if( ! mm_ab_test_inclusion( 'jetpack-start-v6.2', md5( 'jetpack-start-v6.2' ), 30, WEEK_IN_SECONDS * 4 ) ) {
+			mm_ab_test_inclusion( 'jetpack-start-exempt-v6.2', md5( 'jetpack-start-exempt-v6.2' ), 43, WEEK_IN_SECONDS * 4 );
 			add_option( 'jpstart_wizard_has_run', true );
 		}
 	}
@@ -126,9 +121,9 @@ add_filter( 'jetpack_start_steps', 'mm_jetpack_remove_themes_step' );
 //following test for service search
 function mm_plugin_search_offer() {
 
-	$mm_test = get_transient( 'mm_test', array( 'name' => 'none' ) );
-
 	if( isset( $_GET['s'] ) && $plugin = mm_check_plugin_search_value( $_GET['s'] ) ) {
+
+		$mm_test = get_transient( 'mm_test', array( 'name' => 'none' ) );
 		$link = mm_build_link( $plugin['url'], array( 'utm_medium' => 'plugin_admin', 'utm_content' => 'plugin_search' ) );
 		
 		switch ( $mm_test['name'] ) {
@@ -244,8 +239,7 @@ add_action( 'admin_head-plugin-install.php', 'mm_plugin_search_offer', 40 );
 function mm_test_load_search_test() {
 	//at this point there should be 60% of the base left then we take 33%(really20) then 50% of the remaining 40 then 100% of the remaining 20
 	//this should give us a 20/20/20 test
-	mm_ab_test_inclusion( 'plugin-search-banner', md5( 'plugin-search-banner' ), 33, WEEK_IN_SECONDS * 4 );
-	mm_ab_test_inclusion( 'plugin-search-result', md5( 'plugin-search-result' ), 50, WEEK_IN_SECONDS * 4 );
-	mm_ab_test_inclusion( 'plugin-search-notice', md5( 'plugin-search-notice' ), 100, WEEK_IN_SECONDS * 4 );
+	mm_ab_test_inclusion( 'plugin-search-banner', md5( 'plugin-search-banner' ), 50, WEEK_IN_SECONDS * 4 );
+	mm_ab_test_inclusion( 'plugin-search-result', md5( 'plugin-search-result' ), 100, WEEK_IN_SECONDS * 4 );
 }
 add_action( 'admin_init', 'mm_test_load_search_test' );

@@ -2,7 +2,7 @@
 
 function mm_setup() {
 	if( ! get_option( 'mm_master_aff' ) ) {
-		update_option( 'mm_master_aff', ( defined( 'MMAFF' ) ? MMAFF : '' ) );	
+		update_option( 'mm_master_aff', ( defined( 'MMAFF' ) ? MMAFF : '' ) );
 	}
 	if( ! get_option( 'mm_install_date' ) ) {
 		update_option( 'mm_install_date', date( 'M d, Y' ) );
@@ -18,7 +18,7 @@ function mm_setup() {
 		update_option( 'mm_cron', $events );
 	}
 }
-add_action( 'admin_init', 'mm_setup' );
+add_action( 'init', 'mm_setup' );
 
 function mm_api( $args = array(), $query = array() ) {
 	$api_url = "http://mojomarketplace.com/api/v1/";
@@ -35,17 +35,16 @@ function mm_api( $args = array(), $query = array() ) {
 	$query = wp_parse_args( $query, $default_query );
 	$query = http_build_query( array_filter( $query ) );
 	$request_url = $api_url . $args['mojo-items'] . '/' . $args['mojo-platform'] . '/' . $args['mojo-type'];
-	if( isset( $query['count'] ) || isset( $query['seller'] ) ) {
-		$request_url = rtrim( $request_url, '/' );
-		$request_url = $request_url . '?' . $query;
-	}
+	
+	$request_url = rtrim( $request_url, '/' );
+	$request_url = $request_url . '?' . $query;
 
 	$key = md5( $request_url );
 
 	if( false === ( $transient = get_transient( 'mm_api_calls' ) ) || ! isset( $transient[ $key ] ) ) {
 		$transient[ $key ] = wp_remote_get( $request_url );
 		if( ! is_wp_error( $transient[ $key ] ) ) {
-			set_transient( 'mm_api_calls', $transient, DAY_IN_SECONDS );	
+			set_transient( 'mm_api_calls', $transient, DAY_IN_SECONDS );
 		}
 	}
 	return $transient[ $key ];
