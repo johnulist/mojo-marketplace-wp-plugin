@@ -57,16 +57,17 @@ function mm_ux_log( $args = array() ) {
 		$params['tid'] = 'UA-19617272-27'; 
 	}
 
-	$params['z'] = (int) mt_rand( 100000000000, 999999999999 );
+	$z = wp_rand( 0, 1000000000 );
 
 	$query = http_build_query( array_filter( $params ) );
-	
+
 	$args = array(
 		'body'		=> $query,
 		'method'	=> 'POST',
 		'blocking'	=> false
 	);
-	
+
+	$url = add_query_arg( array( 'z' => $z ), $url );
 	wp_remote_post( $url, $args );
 }
 add_action( 'admin_footer', 'mm_ux_log', 9 );
@@ -192,10 +193,23 @@ function mm_ux_log_plugin_version() {
 		'el'	=> $plugin['Version']
 	);
 	$events = get_option( 'mm_cron', array() );
-	$events['daily'][$event['ea']] = $event;
+	$events['daily'][ $event['ea'] ] = $event;
 	update_option( 'mm_cron', $events );
 }
 add_action( 'admin_footer-index.php', 'mm_ux_log_plugin_version' );
+
+function mm_ux_log_php_version() {
+	$event = array(
+		't'		=> 'event',
+		'ec'	=> 'scheduled',
+		'ea'	=> 'php_version',
+		'el'	=> phpversion()
+	);
+	$events = get_option( 'mm_cron', array() );
+	$events['monthly'][ $event['ea'] ] = $event;
+	update_option( 'mm_cron', $events );
+}
+add_action( 'admin_footer-index.php', 'mm_ux_log_php_version' );
 
 function mm_ux_log_wp_version() {
 	global $wp_version;
@@ -541,18 +555,16 @@ function mm_ux_log_btn_click() {
 }
 add_action( 'admin_footer', 'mm_ux_log_btn_click' );
 
-function mm_jetpack_jps_action() {
-	if( isset( $_GET['jps_wp_action'] ) ) {
-		$event = array(
-			't'		=> 'event',
-			'ec'	=> 'jetpack_event',
-			'ea'	=> 'jps_action',
-			'el'	=> $_GET['jps_wp_action']
-		);
-		mm_ux_log( $event );
-	}
+function mm_jetpack_jps_action( $action ) {
+	$event = array(
+		't'     => 'event',
+		'ec'    => 'jetpack_event',
+		'ea'    => 'jps_action',
+		'el'    => $action,
+	);
+	mm_ux_log( $event );
 }
-add_action( 'admin_init', 'mm_jetpack_jps_action' );
+add_action( 'jetpack_start_welcome_panel_action', 'mm_jetpack_jps_action' );
 
 function mm_jetpack_log_module_enabled( $module ) {
 	$event = array(

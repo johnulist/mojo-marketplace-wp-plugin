@@ -2,7 +2,7 @@
 /*
 Plugin Name: MOJO Marketplace
 Description: This plugin adds shortcodes, widgets, and themes to your WordPress site.
-Version: 0.6.1
+Version: 0.7.0
 Author: Mike Hansen
 Author URI: http://mikehansen.me?utm_campaign=plugin&utm_source=mojo_wp_plugin
 License: GPLv2 or later
@@ -17,7 +17,7 @@ if ( ! defined( 'WPINC' ) ) { die; }
 define( 'MM_BASE_DIR', plugin_dir_path( __FILE__ ) );
 define( 'MM_BASE_URL', plugin_dir_url( __FILE__ ) );
 
-if( file_exists( MM_BASE_DIR . 'inc/brand.php' ) ) {
+if ( file_exists( MM_BASE_DIR . 'inc/brand.php' ) ) {
 	require_once( MM_BASE_DIR . 'inc/brand.php' );
 }
 require_once( MM_BASE_DIR . 'inc/base.php' );
@@ -41,13 +41,13 @@ function mm_load_updater() {
 		/*
 		Check class_exist because this could be loaded in a different plugin
 		*/
-		if( ! class_exists( 'GitHub_Updater' ) ) { 
+		if ( ! class_exists( 'GitHub_Updater' ) ) {
 			require_once( MM_BASE_DIR . 'updater/class-github-updater.php' );
 		}
-		if( ! class_exists( 'GitHub_Updater_GitHub_API' ) ) {
+		if ( ! class_exists( 'GitHub_Updater_GitHub_API' ) ) {
 			require_once( MM_BASE_DIR . 'updater/class-github-api.php' );
 		}
-		if( ! class_exists( 'GitHub_Plugin_Updater' ) ) {
+		if ( ! class_exists( 'GitHub_Plugin_Updater' ) ) {
 			require_once( MM_BASE_DIR . 'updater/class-plugin-updater.php' );
 		}
 		new GitHub_Plugin_Updater;

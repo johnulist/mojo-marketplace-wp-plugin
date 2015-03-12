@@ -126,3 +126,14 @@ function mm_display_notifications() {
 	}
 }
 add_action( 'admin_notices', 'mm_display_notifications' );
+
+function mm_display_backup_reminder() {
+	if( 'update-core.php' == basename( $_SERVER['REQUEST_URI'] ) ) {
+		?>
+		<div class="updated">
+			<p>Interested in having you backups setup for you? <a href='<?php echo mm_build_link( 'https://www.mojomarketplace.com/item/backup-your-wordpress-website', array( 'utm_content'=> 'update_backup_notice' ) ); ?>'>learn more</a></p>
+		</div>
+		<?php
+	}
+}
+add_action( 'admin_notices', 'mm_display_backup_reminder' );
